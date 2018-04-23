@@ -8,13 +8,19 @@
   <ItemGroup>
     <PackageReference Include="AngleSharp" Version="0.9.9.2" />
     <PackageReference Include="Autofac" Version="4.8.0" />
-    <PackageReference Include="Quartz" Version="3.0.4" />
+    <PackageReference Include="Microsoft.Owin.Host.HttpListener" Version="4.0.0" />
+    <PackageReference Include="Microsoft.Owin.Hosting" Version="4.0.0" />
+    <PackageReference Include="Quartz" Version="2.6.1" />
     <PackageReference Include="Topshelf" Version="4.0.4" />
+    <PackageReference Include="CrystalQuartz.Owin" Version="4.2.1" />
     <PackageReference Include="WeihanLi.Common" Version="1.0.8.1" />
   </ItemGroup>
 
   <ItemGroup>
     <None Update="log4net.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="quartz_jobs.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

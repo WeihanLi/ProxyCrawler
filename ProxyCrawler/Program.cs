@@ -1,9 +1,7 @@
-﻿using Autofac;
+﻿using System;
+using Autofac;
 using ProxyCrawler.Job;
 using ProxyCrawler.ProxyProviders;
-using Quartz.Impl;
-using System;
-using System.Collections.Specialized;
 using WeihanLi.Common;
 using WeihanLi.Common.Helpers;
 
@@ -17,10 +15,9 @@ namespace ProxyCrawler
     {
         public static void Main(string[] args)
         {
-            LogHelper.LogInit();
-            DependencyInjection();
+            Init();
 #if DEBUG
-            new SyncProxyJob().Execute(null).ConfigureAwait(false).GetAwaiter().GetResult();
+            new SyncProxyJob().Execute(null);
             Console.WriteLine("Job finished");
             Console.ReadLine();
 #else
@@ -35,11 +32,10 @@ namespace ProxyCrawler
 #endif
         }
 
-        private static void DependencyInjection()
+        private static void Init()
         {
+            LogHelper.LogInit();
             var builder = new ContainerBuilder();
-            builder.Register(c => new StdSchedulerFactory(new NameValueCollection { { "quartz.serializer.type", "binary" } }))
-                .SingleInstance();
 
             // TODO:Baibian Ip，Ip解码
             // builder.RegisterType<BaibianIpProxyProvider>().As<IProxyProvider>();
