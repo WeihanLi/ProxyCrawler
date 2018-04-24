@@ -11,7 +11,7 @@ namespace ProxyCrawler.Job
 
         protected BaseJob(ILogHelper logger) => Logger = logger;
 
-        public void Execute(IJobExecutionContext context)
+        public virtual void Execute(IJobExecutionContext context)
         {
             try
             {

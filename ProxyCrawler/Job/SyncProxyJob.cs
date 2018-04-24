@@ -58,9 +58,9 @@ namespace ProxyCrawler.Job
 
         private IEnumerable<ProxyIpEntity> ValidateProxy(IEnumerable<ProxyIpEntity> proxyList)
         {
-            var client = new HttpRequestClient("https://weihanli.xyz");
             foreach (var entity in proxyList)
             {
+                var client = new HttpRequestClient("https://weihanli.xyz");
                 client.AddProxy(new WebProxy(entity.Ip, entity.Port));
                 HttpWebResponse response = null;
                 try
