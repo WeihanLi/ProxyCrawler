@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -9,7 +8,7 @@ using Quartz;
 using WeihanLi.Common;
 using WeihanLi.Common.Helpers;
 using WeihanLi.Common.Log;
-using WeihanLi.Extensions;
+using WeihanLi.Redis;
 
 namespace ProxyCrawler.Job
 {
@@ -25,12 +24,12 @@ namespace ProxyCrawler.Job
 
         protected override async Task ExecuteAsync(IJobExecutionContext context)
         {
-            var ips = (await Task.WhenAll(_proxyProviders.Select(_ => _.SyncProxyIp()))).SelectMany(_ => _).Distinct(new ProxyEntityEqualityComparer()).ToArray();
-            if (ips.Length > 0)
+            var ips = (await Task.WhenAll(_proxyProviders.Select(_ => _.SyncProxyIp()))).SelectMany(_ => _).Distinct(new ProxyEntityEqualityComparer()).ToList();
+            ips.AddRange(RedisManager.GetListClient<ProxyIpEntity>("proxyList").ListRange() ?? Enumerable.Empty<ProxyIpEntity>());
+            if (ips.Count > 0)
             {
                 //验证代理可用性
-                ips = ValidateProxy(ips).ToArray();
-                var result = SyncToDb(ips);
+                var result = SaveProxy(ValidateProxy(ips).ToArray());
                 if (result > 0)
                 {
                     Logger.Info("代理同步成功");
@@ -42,18 +41,15 @@ namespace ProxyCrawler.Job
             }
         }
 
-        private static int SyncToDb(IReadOnlyCollection<ProxyIpEntity> proxyIpEntities)
+        private static int SaveProxy(ProxyIpEntity[] proxyIpEntities)
         {
-            if (proxyIpEntities.Count <= 0)
+            if (proxyIpEntities.Length > 0)
             {
                 return 0;
             }
-            var dataTable = proxyIpEntities.ToDataTable();
-            using (var conn = new SqlConnection(ConfigurationHelper.ConnectionString("Proxy")))
-            {
-                conn.Execute("TRUNCATE TABLE [dbo].[tabProxyIp]");
-                return conn.BulkCopy(dataTable, "tabProxyIp");
-            }
+            var proxyList = RedisManager.GetListClient<ProxyIpEntity>("proxyList");
+            proxyList.Push(proxyIpEntities);
+            return 1;
         }
 
         private IEnumerable<ProxyIpEntity> ValidateProxy(IEnumerable<ProxyIpEntity> proxyList)

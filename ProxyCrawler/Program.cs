@@ -4,6 +4,7 @@ using ProxyCrawler.Job;
 using ProxyCrawler.ProxyProviders;
 using WeihanLi.Common;
 using WeihanLi.Common.Helpers;
+using WeihanLi.Redis;
 
 #if !DEBUG
 using Topshelf;
@@ -34,7 +35,10 @@ namespace ProxyCrawler
 
         private static void Init()
         {
+            //Log
             LogHelper.LogInit();
+
+            // DI
             var builder = new ContainerBuilder();
 
             // TODO:Baibian Ip，Ip解码
@@ -48,6 +52,13 @@ namespace ProxyCrawler
 
             var container = builder.Build();
             DependencyResolver.SetDependencyResolver(t => container.Resolve(t));
+
+            // Redis
+            RedisManager.AddRedisConfig(config =>
+            {
+                config.CachePrefix = "ProxyCrawler";
+                config.DefaultDatabase = 2;
+            });
         }
     }
 }

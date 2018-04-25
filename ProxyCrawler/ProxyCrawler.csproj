@@ -14,6 +14,7 @@
     <PackageReference Include="Topshelf" Version="4.0.4" />
     <PackageReference Include="CrystalQuartz.Owin" Version="4.2.1" />
     <PackageReference Include="WeihanLi.Common" Version="1.0.8.1" />
+    <PackageReference Include="WeihanLi.Redis" Version="1.0.0" />
   </ItemGroup>
 
   <ItemGroup>
