@@ -24,12 +24,12 @@ namespace ProxyCrawler.Job
 
         protected override async Task ExecuteAsync(IJobExecutionContext context)
         {
-            var ips = (await Task.WhenAll(_proxyProviders.Select(_ => _.SyncProxyIp()))).SelectMany(_ => _).Distinct(new ProxyEntityEqualityComparer()).ToList();
+            var ips = (await Task.WhenAll(_proxyProviders.Select(_ => _.SyncProxyIp()))).SelectMany(_ => _).ToList();
             ips.AddRange(RedisManager.GetListClient<ProxyIpEntity>("proxyList").ListRange() ?? Enumerable.Empty<ProxyIpEntity>());
             if (ips.Count > 0)
             {
                 //验证代理可用性
-                var result = SaveProxy(ValidateProxy(ips).ToArray());
+                var result = SaveProxy(ValidateProxy(ips.Distinct(new ProxyEntityEqualityComparer())).ToArray());
                 if (result > 0)
                 {
                     Logger.Info("代理同步成功");
