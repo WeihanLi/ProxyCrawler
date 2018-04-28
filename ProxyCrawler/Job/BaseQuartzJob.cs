@@ -5,11 +5,11 @@ using WeihanLi.Common.Log;
 
 namespace ProxyCrawler.Job
 {
-    public abstract class BaseJob : IJob
+    public abstract class BaseQuartzJob : IJob
     {
         protected readonly ILogHelper Logger;
 
-        protected BaseJob(ILogHelper logger) => Logger = logger;
+        protected BaseQuartzJob(ILogHelper logger) => Logger = logger;
 
         public virtual void Execute(IJobExecutionContext context)
         {

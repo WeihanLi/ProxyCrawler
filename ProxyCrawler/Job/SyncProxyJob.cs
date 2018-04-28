@@ -12,7 +12,7 @@ using WeihanLi.Redis;
 
 namespace ProxyCrawler.Job
 {
-    public class SyncProxyJob : BaseJob
+    public class SyncProxyJob : BaseQuartzJob
     {
         private readonly IReadOnlyCollection<IProxyProvider> _proxyProviders;
 
@@ -70,6 +70,10 @@ namespace ProxyCrawler.Job
                 if (response?.StatusCode == HttpStatusCode.OK)
                 {
                     yield return entity;
+                }
+                else
+                {
+                    Logger.Info($"代理【{entity.Ip}:{entity.Port}】不可用");
                 }
             }
         }

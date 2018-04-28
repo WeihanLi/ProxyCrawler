@@ -5,12 +5,15 @@ using Microsoft.Owin.Hosting;
 using Quartz;
 using Quartz.Impl;
 using Topshelf;
+using WeihanLi.Common.Helpers;
+using WeihanLi.Common.Log;
 
 namespace ProxyCrawler
 {
     public class QuartzService : ServiceControl
     {
         private readonly IScheduler _scheduler = StdSchedulerFactory.GetDefaultScheduler();
+        private static readonly ILogHelper Logger = LogHelper.GetLogHelper<QuartzService>();
 
         private IDisposable _webApp;
 
@@ -21,15 +24,23 @@ namespace ProxyCrawler
                 _webApp.Dispose();
                 _webApp = null;
             }
-            // https://stackoverflow.com/questions/27168432/the-server-factory-could-not-be-located-for-the-given-input-microsoft-owin-host
-            //
-            _webApp = WebApp.Start("http://127.0.0.1:8200", app =>
+
+            try
             {
-                app.UseCrystalQuartz(_scheduler, new CrystalQuartzOptions
+                // https://stackoverflow.com/questions/27168432/the-server-factory-could-not-be-located-for-the-given-input-microsoft-owin-host
+                //
+                _webApp = WebApp.Start("http://127.0.0.1:8200", app =>
                 {
-                    Path = "/quartz"
+                    app.UseCrystalQuartz(_scheduler, new CrystalQuartzOptions
+                    {
+                        Path = "/quartz"
+                    });
                 });
-            });
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("服务启动 webApp 失败", ex);
+            }
             _scheduler.Start();
             return true;
         }
