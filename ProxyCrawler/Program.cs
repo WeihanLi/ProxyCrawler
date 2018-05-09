@@ -1,14 +1,11 @@
 ﻿using System;
 using Autofac;
-using ProxyCrawler.Job;
 using ProxyCrawler.ProxyProviders;
+using Topshelf;
 using WeihanLi.Common;
 using WeihanLi.Common.Helpers;
+using WeihanLi.Common.Log;
 using WeihanLi.Redis;
-
-#if !DEBUG
-using Topshelf;
-#endif
 
 namespace ProxyCrawler
 {
@@ -17,20 +14,31 @@ namespace ProxyCrawler
         public static void Main(string[] args)
         {
             Init();
-#if DEBUG
-            new SyncProxyJob().Execute(null);
-            Console.WriteLine("Job finished");
-            Console.ReadLine();
-#else
-            HostFactory.Run(host =>
+            try
             {
-                host.RunAsLocalSystem();
-                host.StartAutomaticallyDelayed();
-                host.Service<QuartzService>();
-                host.SetServiceName("ProxyCrawler");
-                host.SetDisplayName("ProxyCrawler");
-            });
-#endif
+                HostFactory.Run(host =>
+                {
+                    host.RunAsLocalSystem();
+                    host.StartAutomatically();
+
+                    host.SetServiceName("ProxyCrawler");
+                    host.SetDisplayName("ProxyCrawler");
+                    host.SetDescription("代理爬虫");
+
+                    host.DependsOn("Redis");
+
+                    host.Service<QuartzService>(service =>
+                    {
+                        service.ConstructUsing(() => new QuartzService());
+                        service.WhenStarted(x => x.Start());
+                        service.WhenStopped(x => x.Stop());
+                    });
+                });
+            }
+            catch (Exception e)
+            {
+                LogHelper.GetLogHelper<Program>().Error(e);
+            }
         }
 
         private static void Init()

@@ -41,10 +41,11 @@ namespace ProxyCrawler.Job
             }
         }
 
-        private static int SaveProxy(ProxyIpEntity[] proxyIpEntities)
+        private int SaveProxy(ProxyIpEntity[] proxyIpEntities)
         {
             if (proxyIpEntities.Length > 0)
             {
+                Logger.Info("没有可用的代理");
                 return 0;
             }
             var proxyList = RedisManager.GetListClient<ProxyIpEntity>("proxyList");
@@ -65,7 +66,7 @@ namespace ProxyCrawler.Job
                 }
                 catch (Exception ex)
                 {
-                    Logger.Info("异常", ex);
+                    Logger.Warn($"验证代理【{entity.Ip}:{entity.Port}】发生异常", ex);
                 }
                 if (response?.StatusCode == HttpStatusCode.OK)
                 {
@@ -73,7 +74,7 @@ namespace ProxyCrawler.Job
                 }
                 else
                 {
-                    Logger.Info($"代理【{entity.Ip}:{entity.Port}】不可用");
+                    Logger.Warn($"代理【{entity.Ip}:{entity.Port}】不可用,Response HttpCode：{response?.StatusCode}");
                 }
             }
         }
