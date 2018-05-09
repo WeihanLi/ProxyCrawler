@@ -16,7 +16,7 @@ namespace ProxyCrawler.Job
     {
         private readonly IReadOnlyCollection<IProxyProvider> _proxyProviders;
 
-        public SyncProxyJob() : this(DependencyResolver.Current.GetServices<IProxyProvider>().ToArray())
+        public SyncProxyJob() : this(DependencyResolver.Current.ResolveServices<IProxyProvider>().ToArray())
         {
         }
 
@@ -48,6 +48,7 @@ namespace ProxyCrawler.Job
                 Logger.Info("没有可用的代理");
                 return 0;
             }
+            Logger.Info($"可用代理IP数量：{proxyIpEntities.Length}");
             var proxyList = RedisManager.GetListClient<ProxyIpEntity>("proxyList");
             proxyList.Push(proxyIpEntities);
             return 1;
