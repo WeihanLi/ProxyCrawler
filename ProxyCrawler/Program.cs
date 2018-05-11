@@ -48,7 +48,9 @@ namespace ProxyCrawler
 
             // DI
             var builder = new ContainerBuilder();
-
+#if DEBUG
+            builder.RegisterType<YundailiProxyProvider>().As<IProxyProvider>();
+#else
             // TODO:Baibian Ip，Ip解码
             // builder.RegisterType<BaibianIpProxyProvider>().As<IProxyProvider>();
             builder.RegisterType<CoderBusyProxyProvider>().As<IProxyProvider>();
@@ -57,7 +59,7 @@ namespace ProxyCrawler
             builder.RegisterType<SixIpProxyProvider>().As<IProxyProvider>();
             builder.RegisterType<XicidailiProxyProvider>().As<IProxyProvider>();
             builder.RegisterType<YundailiProxyProvider>().As<IProxyProvider>();
-
+#endif
             var container = builder.Build();
             DependencyResolver.SetDependencyResolver(t => container.Resolve(t));
 

@@ -1,11 +1,12 @@
-﻿using AngleSharp.Parser.Html;
-using ProxyCrawler.Entity;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using AngleSharp.Parser.Html;
+using ProxyCrawler.Entity;
+using WeihanLi.Common.Helpers;
 using WeihanLi.Common.Log;
 
 namespace ProxyCrawler.ProxyProviders
@@ -18,14 +19,22 @@ namespace ProxyCrawler.ProxyProviders
 
         protected virtual int TotalPage { get; } = 1;
 
-        protected readonly HttpClient Client = new HttpClient();
+        protected readonly HttpClient Client;
 
         //创建一个（可重用）解析器前端
         protected static readonly HtmlParser Parser = new HtmlParser();
 
         protected readonly ILogHelper Logger;
 
-        protected BaseProxyProvider(ILogHelper logger) => Logger = logger;
+        protected BaseProxyProvider(ILogHelper logger)
+        {
+            Logger = logger;
+            Client = new HttpClient
+            {
+                Timeout = TimeSpan.FromSeconds(10)
+            };
+            Client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", HttpHelper.GetUserAgent());
+        }
 
         protected abstract Task<IEnumerable<ProxyIpEntity>> SyncProxyInternal(int pageIndex);
 

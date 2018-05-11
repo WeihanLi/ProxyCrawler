@@ -43,7 +43,7 @@ namespace ProxyCrawler.Job
 
         private int SaveProxy(ProxyIpEntity[] proxyIpEntities)
         {
-            if (proxyIpEntities.Length > 0)
+            if (proxyIpEntities.Length == 0)
             {
                 Logger.Info("没有可用的代理");
                 return 0;
