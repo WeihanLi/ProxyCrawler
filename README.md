@@ -8,10 +8,10 @@
 
 1. 安装 `Redis` 环境
 
-redis 下载
+    redis 下载
 
-- linux : <https://redis.io/download>
-- windows : <https://github.com/MSOpenTech/redis/releases>
+    - linux : <https://redis.io/download>
+    - windows : <https://github.com/MSOpenTech/redis/releases>
 
 1. 在 Release 模式下编译项目
 
