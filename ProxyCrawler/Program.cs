@@ -1,10 +1,8 @@
-﻿using System;
-using Autofac;
+﻿using Autofac;
+using ProxyCrawler.Job;
 using ProxyCrawler.ProxyProviders;
-using Topshelf;
 using WeihanLi.Common;
 using WeihanLi.Common.Helpers;
-using WeihanLi.Common.Log;
 using WeihanLi.Redis;
 
 namespace ProxyCrawler
@@ -14,6 +12,9 @@ namespace ProxyCrawler
         public static void Main(string[] args)
         {
             Init();
+#if DEBUG
+            new SyncProxyJob().Execute(null);
+#else
             try
             {
                 HostFactory.Run(host =>
@@ -39,6 +40,7 @@ namespace ProxyCrawler
             {
                 LogHelper.GetLogHelper<Program>().Error(e);
             }
+#endif
         }
 
         private static void Init()
@@ -49,7 +51,7 @@ namespace ProxyCrawler
             // DI
             var builder = new ContainerBuilder();
 #if DEBUG
-            builder.RegisterType<YundailiProxyProvider>().As<IProxyProvider>();
+            builder.RegisterType<KuaidailiProxyProvider>().As<IProxyProvider>();
 #else
             // TODO:Baibian Ip，Ip解码
             // builder.RegisterType<BaibianIpProxyProvider>().As<IProxyProvider>();
@@ -66,8 +68,8 @@ namespace ProxyCrawler
             // Redis
             RedisManager.AddRedisConfig(config =>
             {
-                config.CachePrefix = "ProxyCrawler";
                 config.DefaultDatabase = 2;
+                config.EnableCompress = false;
             });
         }
     }

@@ -16,7 +16,7 @@ namespace ProxyCrawler.Job
             try
             {
                 Logger.Info("Job 开始执行");
-                Task.WaitAll(ExecuteAsync(context));
+                ExecuteAsync(context).Wait();
             }
             catch (Exception ex)
             {

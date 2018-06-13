@@ -8,6 +8,7 @@ using Quartz;
 using WeihanLi.Common;
 using WeihanLi.Common.Helpers;
 using WeihanLi.Common.Log;
+using WeihanLi.Extensions;
 using WeihanLi.Redis;
 
 namespace ProxyCrawler.Job
@@ -29,7 +30,9 @@ namespace ProxyCrawler.Job
             if (ips.Count > 0)
             {
                 //验证代理可用性
-                var result = SaveProxy(ValidateProxy(ips.Distinct(new ProxyEntityEqualityComparer())).ToArray());
+                var result = SaveProxy(
+                    await ValidateProxyAsync(ips.Distinct(new ProxyEntityEqualityComparer()).ToArray())
+                    );
                 if (result > 0)
                 {
                     Logger.Info("代理同步成功");
@@ -49,34 +52,44 @@ namespace ProxyCrawler.Job
                 return 0;
             }
             Logger.Info($"可用代理IP数量：{proxyIpEntities.Length}");
+            var commonClient = RedisManager.GetCommonRedisClient(RedisDataType.List);
+            if (commonClient.KeyExists("proxyList"))
+            {
+                commonClient.KeyDelete("proxyList");
+            }
             var proxyList = RedisManager.GetListClient<ProxyIpEntity>("proxyList");
             proxyList.Push(proxyIpEntities);
             return 1;
         }
 
-        private IEnumerable<ProxyIpEntity> ValidateProxy(IEnumerable<ProxyIpEntity> proxyList)
+        private async Task<ProxyIpEntity[]> ValidateProxyAsync(IReadOnlyCollection<ProxyIpEntity> proxyList)
         {
-            foreach (var entity in proxyList)
+#if DEBUG
+            await Task.Run(() => proxyList.ForEach(p => p.IsValid = true));
+#else
+
+            await Task.WhenAll(proxyList.Select(ValidateProxyAsync));
+#endif
+            return proxyList.Where(_ => _.IsValid).ToArray();
+        }
+
+        private async Task ValidateProxyAsync(ProxyIpEntity proxyEntity)
+        {
+            var client = new HttpRequestClient("https://baidu.com");
+            client.AddProxy(new WebProxy(proxyEntity.Ip, proxyEntity.Port));
+            HttpWebResponse response = null;
+            try
             {
-                var client = new HttpRequestClient("https://weihanli.xyz");
-                client.AddProxy(new WebProxy(entity.Ip, entity.Port));
-                HttpWebResponse response = null;
-                try
-                {
-                    response = RetryHelper.TryInvoke(() => client.ExecuteForResponse(), res => res.StatusCode == HttpStatusCode.OK);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Warn($"验证代理【{entity.Ip}:{entity.Port}】发生异常", ex);
-                }
-                if (response?.StatusCode == HttpStatusCode.OK)
-                {
-                    yield return entity;
-                }
-                else
-                {
-                    Logger.Warn($"代理【{entity.Ip}:{entity.Port}】不可用,Response HttpCode：{response?.StatusCode}");
-                }
+                response = await RetryHelper.TryInvokeAsync(() => client.ExecuteForResponseAsync(), res => res.StatusCode == HttpStatusCode.OK);
+            }
+            catch (Exception ex)
+            {
+                Logger.Warn($"验证代理【{proxyEntity.Ip}:{proxyEntity.Port}】发生异常", ex);
+            }
+            if (response?.StatusCode != null)
+            {
+                proxyEntity.IsValid = true;
+                Logger.Info($"验证代理【{proxyEntity.Ip}:{proxyEntity.Port}】,response StatusCode:{response.StatusCode}");
             }
         }
     }

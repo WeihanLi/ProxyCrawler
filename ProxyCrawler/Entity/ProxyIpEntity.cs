@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace ProxyCrawler.Entity
 {
@@ -11,6 +12,9 @@ namespace ProxyCrawler.Entity
         public string Location { get; set; }
 
         public string Channel { get; set; }
+
+        [JsonIgnore]
+        public bool IsValid { get; set; }
     }
 
     internal class ProxyEntityEqualityComparer : IEqualityComparer<ProxyIpEntity>
